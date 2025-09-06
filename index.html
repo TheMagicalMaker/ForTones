@@ -917,7 +917,7 @@
                 <div class="character-display">
                     <div class="character-info">
                         <div class="big-character" id="big-char">妈</div>
-                        <div class="character-pinyin" id="char-pinyin">mā</div>
+                        <div class="character-pinyin" id="char-pinyin" style="display: none;">mā</div>
                         <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
                     </div>
                 </div>
@@ -1260,6 +1260,7 @@
             
             if (pinyinElement) {
                 pinyinElement.textContent = question.pinyin;
+                pinyinElement.style.display = 'none'; // Hide pinyin until user answers
             }
             
             // Reset options
@@ -1316,6 +1317,13 @@
             }
             
             resultDiv.style.display = 'block';
+            
+            // Show pinyin after user selects an answer
+            const pinyinElement = document.getElementById('char-pinyin');
+            if (pinyinElement) {
+                pinyinElement.style.display = 'block';
+            }
+            
             if (nextBtn) {
                 console.log('Showing next question button');
                 nextBtn.style.display = 'inline-block';
@@ -1512,7 +1520,7 @@
                 <div class="character-display">
                     <div class="character-info">
                         <div class="big-character" id="big-char">妈</div>
-                        <div class="character-pinyin" id="char-pinyin">mā</div>
+                        <div class="character-pinyin" id="char-pinyin" style="display: none;">mā</div>
                         <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
                     </div>
                 </div>
