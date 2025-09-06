@@ -872,6 +872,97 @@
             transform: translateY(-2px);
         }
 
+        /* Modal popup styles */
+        .quiz-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .quiz-popup {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.7) translateY(50px);
+            transition: all 0.3s ease;
+        }
+
+        .quiz-popup-overlay.show .quiz-popup {
+            transform: scale(1) translateY(0);
+        }
+
+        .popup-progress {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            padding: 5px 12px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .popup-emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .popup-message {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .popup-details {
+            font-size: 1em;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .popup-pinyin {
+            font-size: 1.2em;
+            color: #3498db;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #bdc3c7;
+            transition: color 0.3s ease;
+        }
+
+        .popup-close:hover {
+            color: #7f8c8d;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -927,8 +1018,18 @@
                     <div class="quiz-option" onclick="selectAnswer(3)">3rd Tone (Dipping)</div>
                     <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
                 </div>
-                <div id="quiz-result" class="quiz-result" style="display: none;"></div>
-                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
+            </div>
+
+            <!-- Quiz Feedback Popup -->
+            <div id="quiz-popup-overlay" class="quiz-popup-overlay">
+                <div class="quiz-popup">
+                    <button class="popup-close" onclick="closeQuizPopup()">&times;</button>
+                    <div class="popup-progress" id="popup-progress">Question 1 of 8</div>
+                    <div class="popup-emoji" id="popup-emoji">🎉</div>
+                    <div class="popup-message" id="popup-message">Correct!</div>
+                    <div class="popup-pinyin" id="popup-pinyin">mā</div>
+                    <div class="popup-details" id="popup-details">"妈" (mother) is 1st tone.</div>
+                </div>
             </div>
         </div>
 
@@ -1269,8 +1370,6 @@
                 option.className = 'quiz-option';
             });
             
-            document.getElementById('quiz-result').style.display = 'none';
-            document.getElementById('next-question').style.display = 'none';
             answered = false;
         }
 
@@ -1280,8 +1379,6 @@
             answered = true;
             const question = quizData[currentQuestion];
             const options = document.querySelectorAll('.quiz-option');
-            const resultDiv = document.getElementById('quiz-result');
-            const nextBtn = document.getElementById('next-question');
             
             // Track answer performance
             const responseTime = questionStartTime ? Date.now() - questionStartTime : 0;
@@ -1307,34 +1404,87 @@
                 }
             });
             
-            if (selectedTone === question.tone) {
-                score++;
-                resultDiv.textContent = `Correct! 🎉 "${question.char}" (${question.pinyin}) is ${question.tone}${getOrdinalSuffix(question.tone)} tone.`;
-                resultDiv.className = 'quiz-result correct';
-            } else {
-                resultDiv.textContent = `Not quite. "${question.char}" (${question.pinyin}) is ${question.tone}${getOrdinalSuffix(question.tone)} tone, not ${selectedTone}${getOrdinalSuffix(selectedTone)} tone.`;
-                resultDiv.className = 'quiz-result incorrect';
-            }
-            
-            resultDiv.style.display = 'block';
-            
             // Show pinyin after user selects an answer
             const pinyinElement = document.getElementById('char-pinyin');
             if (pinyinElement) {
                 pinyinElement.style.display = 'block';
             }
             
-            if (nextBtn) {
-                console.log('Showing next question button');
-                nextBtn.style.display = 'inline-block';
-            } else {
-                console.error('Next question button not found!');
-            }
+            // Show popup feedback
+            showQuizPopup(isCorrect, question, selectedTone);
         }
 
         function getOrdinalSuffix(num) {
             const suffixes = ['', 'st', 'nd', 'rd', 'th'];
             return suffixes[num] || 'th';
+        }
+
+        function showQuizPopup(isCorrect, question, selectedTone) {
+            const overlay = document.getElementById('quiz-popup-overlay');
+            const progress = document.getElementById('popup-progress');
+            const emoji = document.getElementById('popup-emoji');
+            const message = document.getElementById('popup-message');
+            const pinyin = document.getElementById('popup-pinyin');
+            const details = document.getElementById('popup-details');
+            
+            // Set progress text
+            progress.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+            
+            // Set popup content based on correctness
+            if (isCorrect) {
+                if (selectedTone === question.tone) {
+                    score++;
+                }
+                emoji.textContent = getCorrectEmoji();
+                message.textContent = getCorrectMessage();
+                pinyin.textContent = question.pinyin;
+                details.textContent = `"${question.char}" (${question.meaning}) is ${question.tone}${getOrdinalSuffix(question.tone)} tone.`;
+                emoji.style.color = '#27ae60';
+                message.style.color = '#27ae60';
+            } else {
+                emoji.textContent = getIncorrectEmoji();
+                message.textContent = getIncorrectMessage();
+                pinyin.textContent = question.pinyin;
+                details.textContent = `"${question.char}" (${question.meaning}) is ${question.tone}${getOrdinalSuffix(question.tone)} tone, not ${selectedTone}${getOrdinalSuffix(selectedTone)} tone.`;
+                emoji.style.color = '#e74c3c';
+                message.style.color = '#e74c3c';
+            }
+            
+            // Show popup with animation
+            overlay.classList.add('show');
+            
+            // Auto-advance to next question after 2.5 seconds
+            setTimeout(() => {
+                closeQuizPopup();
+                setTimeout(() => {
+                    nextQuestion();
+                }, 300); // Small delay for smooth transition
+            }, 2500);
+        }
+
+        function closeQuizPopup() {
+            const overlay = document.getElementById('quiz-popup-overlay');
+            overlay.classList.remove('show');
+        }
+
+        function getCorrectEmoji() {
+            const emojis = ['🎉', '✨', '🌟', '👏', '🎯', '💫', '🙌', '🎊'];
+            return emojis[Math.floor(Math.random() * emojis.length)];
+        }
+
+        function getIncorrectEmoji() {
+            const emojis = ['😅', '🤔', '💭', '📚', '🎯', '💪', '🤓', '📖'];
+            return emojis[Math.floor(Math.random() * emojis.length)];
+        }
+
+        function getCorrectMessage() {
+            const messages = ['Correct!', 'Well done!', 'Excellent!', 'Perfect!', 'Great job!', 'Amazing!'];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        function getIncorrectMessage() {
+            const messages = ['Not quite!', 'Almost there!', 'Keep trying!', 'Good effort!', 'Try again!', 'Close one!'];
+            return messages[Math.floor(Math.random() * messages.length)];
         }
 
         let isProcessingNext = false;
@@ -1530,8 +1680,6 @@
                     <div class="quiz-option" onclick="selectAnswer(3)">3rd Tone (Dipping)</div>
                     <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
                 </div>
-                <div id="quiz-result" class="quiz-result" style="display: none;"></div>
-                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
             `;
             loadQuestion();
         }
@@ -1545,14 +1693,6 @@
                 updatePracticeWord();
                 initToneVisualization();
                 
-                // Add event delegation for next question button
-                document.addEventListener('click', function(event) {
-                    if (event.target && event.target.id === 'next-question') {
-                        console.log('Next question button clicked via event delegation');
-                        nextQuestion();
-                        event.preventDefault();
-                    }
-                });
                 
                 console.log('App initialized successfully');
             } catch (error) {
