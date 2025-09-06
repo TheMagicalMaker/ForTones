@@ -190,9 +190,23 @@
 
         .quiz-title {
             font-size: 2em;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-align: center;
             color: #2c3e50;
+        }
+
+        .quiz-progress {
+            text-align: center;
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background: #ecf0f1;
+            border-radius: 20px;
+            display: inline-block;
+            margin-left: 50%;
+            transform: translateX(-50%);
+            font-weight: 500;
         }
 
         .quiz-question {
@@ -591,6 +605,7 @@
 
         <div class="quiz-section">
             <h2 class="quiz-title">🧠 Tone Recognition Quiz</h2>
+            <div class="quiz-progress" id="quiz-progress">Question 1 of 8</div>
             <div id="quiz-content">
                 <div class="quiz-question" id="quiz-question">
                     Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
@@ -602,7 +617,7 @@
                     <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
                 </div>
                 <div id="quiz-result" class="quiz-result" style="display: none;"></div>
-                <button id="next-question" class="next-question" onclick="nextQuestion()" style="display: none;">Next Question</button>
+                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
             </div>
         </div>
 
@@ -740,10 +755,38 @@
         }
 
         function loadQuestion() {
+            console.log('=== loadQuestion called ===');
+            console.log('currentQuestion index:', currentQuestion);
+            console.log('Display will show: Question', currentQuestion + 1, 'of', quizData.length);
+            
             const question = quizData[currentQuestion];
-            document.getElementById('quiz-char').textContent = question.char;
-            document.getElementById('quiz-question').innerHTML = 
-                `Which tone does this character use: <strong>${question.char}</strong> (${question.meaning})?`;
+            console.log('Question data:', question);
+            
+            // Update progress counter
+            const progressDiv = document.getElementById('quiz-progress');
+            if (progressDiv) {
+                const displayText = `Question ${currentQuestion + 1} of ${quizData.length}`;
+                progressDiv.textContent = displayText;
+                console.log('Progress updated to:', displayText);
+            }
+            
+            const charElement = document.getElementById('quiz-char');
+            const questionElement = document.getElementById('quiz-question');
+            
+            console.log('Updating char element with:', question.char);
+            console.log('Updating question element with meaning:', question.meaning);
+            
+            if (charElement) {
+                charElement.textContent = question.char;
+            } else {
+                console.error('quiz-char element not found!');
+            }
+            
+            if (questionElement) {
+                questionElement.innerHTML = `Which tone does this character use: <strong>${question.char}</strong> (${question.meaning})?`;
+            } else {
+                console.error('quiz-question element not found!');
+            }
             
             // Reset options
             const options = document.querySelectorAll('.quiz-option');
@@ -763,6 +806,7 @@
             const question = quizData[currentQuestion];
             const options = document.querySelectorAll('.quiz-option');
             const resultDiv = document.getElementById('quiz-result');
+            const nextBtn = document.getElementById('next-question');
             
             options.forEach((option, index) => {
                 const toneNum = index + 1;
@@ -783,7 +827,12 @@
             }
             
             resultDiv.style.display = 'block';
-            document.getElementById('next-question').style.display = 'inline-block';
+            if (nextBtn) {
+                console.log('Showing next question button');
+                nextBtn.style.display = 'inline-block';
+            } else {
+                console.error('Next question button not found!');
+            }
         }
 
         function getOrdinalSuffix(num) {
@@ -791,27 +840,59 @@
             return suffixes[num] || 'th';
         }
 
+        let isProcessingNext = false;
+        
         function nextQuestion() {
+            console.log('=== nextQuestion function called ===');
+            
+            if (isProcessingNext) {
+                console.log('Already processing next question, ignoring...');
+                return;
+            }
+            
+            isProcessingNext = true;
+            console.log('Current question index:', currentQuestion);
+            console.log('Total questions:', quizData.length);
+            console.log('Current score:', score);
+            
             currentQuestion++;
+            console.log('After increment, currentQuestion:', currentQuestion);
+            
             if (currentQuestion >= quizData.length) {
                 // Quiz completed
-                document.getElementById('quiz-content').innerHTML = `
-                    <div style="text-align: center;">
-                        <h3>Quiz Complete! 🎊</h3>
-                        <p style="font-size: 1.2em; margin: 20px 0;">
-                            You scored ${score} out of ${quizData.length}
-                        </p>
-                        <button class="next-question" onclick="resetQuiz()">Start Over</button>
-                    </div>
-                `;
+                console.log('Quiz completed - showing final screen');
+                const quizContent = document.getElementById('quiz-content');
+                if (quizContent) {
+                    quizContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <h3>Quiz Complete! 🎊</h3>
+                            <p style="font-size: 1.2em; margin: 20px 0;">
+                                You scored ${score} out of ${quizData.length}
+                            </p>
+                            <button class="next-question" onclick="resetQuiz()">Start Over</button>
+                        </div>
+                    `;
+                }
             } else {
+                console.log('Loading next question index:', currentQuestion);
                 loadQuestion();
             }
+            
+            setTimeout(() => {
+                isProcessingNext = false;
+            }, 100);
         }
 
         function resetQuiz() {
             currentQuestion = 0;
             score = 0;
+            
+            // Reset progress counter
+            const progressDiv = document.getElementById('quiz-progress');
+            if (progressDiv) {
+                progressDiv.textContent = `Question 1 of ${quizData.length}`;
+            }
+            
             document.getElementById('quiz-content').innerHTML = `
                 <div class="quiz-question" id="quiz-question">
                     Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
@@ -823,17 +904,32 @@
                     <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
                 </div>
                 <div id="quiz-result" class="quiz-result" style="display: none;"></div>
-                <button id="next-question" class="next-question" onclick="nextQuestion()" style="display: none;">Next Question</button>
+                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
             `;
             loadQuestion();
         }
 
         // Initialize the quiz
         document.addEventListener('DOMContentLoaded', function() {
-            loadQuestion();
-            initializeWaveBars();
-            updatePracticeWord();
-            initToneVisualization();
+            try {
+                loadQuestion();
+                initializeWaveBars();
+                updatePracticeWord();
+                initToneVisualization();
+                
+                // Add event delegation for next question button
+                document.addEventListener('click', function(event) {
+                    if (event.target && event.target.id === 'next-question') {
+                        console.log('Next question button clicked via event delegation');
+                        nextQuestion();
+                        event.preventDefault();
+                    }
+                });
+                
+                console.log('App initialized successfully');
+            } catch (error) {
+                console.error('Error initializing app:', error);
+            }
         });
 
         // Tone visualization functions
