@@ -211,9 +211,57 @@
 
         .quiz-question {
             font-size: 1.3em;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             text-align: center;
             color: #34495e;
+        }
+
+        .character-display {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .character-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .big-character {
+            font-size: 4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .character-pinyin {
+            font-size: 1.5em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .play-character-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-character-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .play-character-btn:active {
+            transform: translateY(0);
         }
 
         .quiz-options {
@@ -610,6 +658,13 @@
                 <div class="quiz-question" id="quiz-question">
                     Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
                 </div>
+                <div class="character-display">
+                    <div class="character-info">
+                        <div class="big-character" id="big-char">妈</div>
+                        <div class="character-pinyin" id="char-pinyin">mā</div>
+                        <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
+                    </div>
+                </div>
                 <div class="quiz-options" id="quiz-options">
                     <div class="quiz-option" onclick="selectAnswer(1)">1st Tone (High Level)</div>
                     <div class="quiz-option" onclick="selectAnswer(2)">2nd Tone (Rising)</div>
@@ -754,6 +809,36 @@
             oscillator.stop(startTime + duration);
         }
 
+        function playCharacterTone() {
+            const question = quizData[currentQuestion];
+            if (question && question.tone) {
+                console.log('Playing tone for character:', question.char, 'tone:', question.tone);
+                playTone(question.tone);
+                
+                // Visual feedback
+                const playBtn = document.getElementById('play-char-btn');
+                const bigChar = document.getElementById('big-char');
+                
+                if (playBtn) {
+                    playBtn.style.background = '#27ae60';
+                    playBtn.textContent = '🎵 Playing...';
+                    setTimeout(() => {
+                        playBtn.style.background = '#3498db';
+                        playBtn.textContent = '🔊 Play Sound';
+                    }, 1000);
+                }
+                
+                if (bigChar) {
+                    bigChar.style.transform = 'scale(1.1)';
+                    bigChar.style.color = '#e74c3c';
+                    setTimeout(() => {
+                        bigChar.style.transform = 'scale(1)';
+                        bigChar.style.color = '#2c3e50';
+                    }, 1000);
+                }
+            }
+        }
+
         function loadQuestion() {
             console.log('=== loadQuestion called ===');
             console.log('currentQuestion index:', currentQuestion);
@@ -786,6 +871,18 @@
                 questionElement.innerHTML = `Which tone does this character use: <strong>${question.char}</strong> (${question.meaning})?`;
             } else {
                 console.error('quiz-question element not found!');
+            }
+
+            // Update character display
+            const bigCharElement = document.getElementById('big-char');
+            const pinyinElement = document.getElementById('char-pinyin');
+            
+            if (bigCharElement) {
+                bigCharElement.textContent = question.char;
+            }
+            
+            if (pinyinElement) {
+                pinyinElement.textContent = question.pinyin;
             }
             
             // Reset options
@@ -896,6 +993,13 @@
             document.getElementById('quiz-content').innerHTML = `
                 <div class="quiz-question" id="quiz-question">
                     Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
+                </div>
+                <div class="character-display">
+                    <div class="character-info">
+                        <div class="big-character" id="big-char">妈</div>
+                        <div class="character-pinyin" id="char-pinyin">mā</div>
+                        <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
+                    </div>
                 </div>
                 <div class="quiz-options" id="quiz-options">
                     <div class="quiz-option" onclick="selectAnswer(1)">1st Tone (High Level)</div>
