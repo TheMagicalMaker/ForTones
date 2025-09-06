@@ -325,6 +325,126 @@
             100% { transform: scale(1); }
         }
 
+        .practice-word {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .tone-info {
+            font-size: 1em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .recording-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .record-btn, .play-btn, .next-word-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .record-btn.start {
+            background: #27ae60;
+            color: white;
+        }
+
+        .record-btn.stop {
+            background: #e74c3c;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .play-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .play-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .next-word-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .record-btn:hover:not(.stop), .play-btn:hover:not(:disabled), .next-word-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .recording-status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .recording-status.recording {
+            background: #d4edda;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
+        .wave-visualization {
+            height: 60px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wave-bars {
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            height: 40px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: linear-gradient(to top, #3498db, #5dade2);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .feedback-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback-section.show {
+            opacity: 1;
+        }
+
+        .feedback-section.good {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -340,6 +460,15 @@
             
             .quiz-section, .practice-section {
                 padding: 20px;
+            }
+
+            .recording-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .record-btn, .play-btn, .next-word-btn {
+                width: 200px;
             }
         }
     </style>
@@ -436,7 +565,27 @@
                 <div class="practice-tone" onclick="playTone(4)">4</div>
             </div>
             <p><em>Click each tone to hear an example sound pattern</em></p>
-            <button id="record-btn" onclick="toggleRecording()">🎤 Start Recording</button>
+            
+            <div class="practice-word">
+                <div class="chinese-char" id="practice-char">妈</div>
+                <div class="pinyin" id="practice-pinyin">mā</div>
+                <div class="meaning" id="practice-meaning">mother</div>
+                <div class="tone-info" id="practice-tone-info">1st tone (High Level)</div>
+            </div>
+            
+            <div class="recording-controls">
+                <button id="record-btn" class="record-btn start" onclick="toggleRecording()">🎤 Start Recording</button>
+                <button id="play-btn" class="play-btn" onclick="playRecording()" disabled>▶️ Play Recording</button>
+                <button id="next-word-btn" class="next-word-btn" onclick="nextPracticeWord()">➡️ Next Word</button>
+            </div>
+            
+            <div class="recording-status" id="recording-status">Ready to record - Press the microphone button to start</div>
+            
+            <div class="wave-visualization">
+                <div id="wave-bars" class="wave-bars"></div>
+            </div>
+            
+            <div id="feedback" class="feedback-section"></div>
         </div>
     </div>
 
@@ -460,6 +609,13 @@
         // Audio context for tone generation
         let audioContext;
         let isAudioInitialized = false;
+
+        // Recording variables
+        let isRecording = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recordedAudio = null;
+        let currentPracticeWord = 0;
 
         function initAudio() {
             if (!isAudioInitialized) {
