@@ -195,6 +195,18 @@
             color: #2c3e50;
         }
 
+        .tones-section {
+            text-align: center;
+            margin: 40px 0 20px 0;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: white;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
         .quiz-progress {
             text-align: center;
             font-size: 1.1em;
@@ -788,7 +800,7 @@
         </div>
 
         <div class="quiz-section">
-            <h2 class="quiz-title">🧠 Tone Recognition Quiz</h2>
+            <h2 class="quiz-title">👂 Can you hear the tones?</h2>
             <div class="quiz-progress" id="quiz-progress">Question 1 of 8</div>
             <div id="quiz-content">
                 <div class="quiz-question" id="quiz-question">
@@ -810,6 +822,10 @@
                 <div id="quiz-result" class="quiz-result" style="display: none;"></div>
                 <button id="next-question" class="next-question" style="display: none;">Next Question</button>
             </div>
+        </div>
+
+        <div class="tones-section">
+            <h2 class="section-title">🎵 Now, let's hear the 4 tones</h2>
         </div>
 
         <div class="tones-grid">
@@ -871,7 +887,7 @@
         </div>
 
         <div class="practice-section">
-            <h2>🎯 Tone Practice</h2>
+            <h2>🎤 Can you say the tones?</h2>
             <p>Click on a tone number to hear how it sounds, then practice speaking!</p>
             <div class="tone-practice">
                 <div class="practice-tone" onclick="playTone(1)">1</div>
