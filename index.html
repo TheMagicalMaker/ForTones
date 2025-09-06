@@ -445,6 +445,57 @@
             border: 2px solid #27ae60;
         }
 
+        .tone-visualization-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tone-visualization-container h4 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        #tone-canvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .tone-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-color.reference {
+            background: #3498db;
+        }
+
+        .legend-color.recording {
+            background: #e74c3c;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -581,6 +632,15 @@
             
             <div class="recording-status" id="recording-status">Ready to record - Press the microphone button to start</div>
             
+            <div class="tone-visualization-container">
+                <h4>Target Tone Pattern:</h4>
+                <canvas id="tone-canvas" width="400" height="150"></canvas>
+                <div class="tone-legend">
+                    <span class="legend-item"><span class="legend-color reference"></span>Target Pattern</span>
+                    <span class="legend-item"><span class="legend-color recording"></span>Your Voice</span>
+                </div>
+            </div>
+            
             <div class="wave-visualization">
                 <div id="wave-bars" class="wave-bars"></div>
             </div>
@@ -616,6 +676,13 @@
         let recordedChunks = [];
         let recordedAudio = null;
         let currentPracticeWord = 0;
+
+        // Tone visualization variables
+        let canvas;
+        let ctx;
+        let analyser;
+        let pitchData = [];
+        let animationId;
 
         function initAudio() {
             if (!isAudioInitialized) {
@@ -766,7 +833,224 @@
             loadQuestion();
             initializeWaveBars();
             updatePracticeWord();
+            initToneVisualization();
         });
+
+        // Tone visualization functions
+        function initToneVisualization() {
+            canvas = document.getElementById('tone-canvas');
+            ctx = canvas.getContext('2d');
+            drawReferenceTone();
+        }
+
+        function drawReferenceTone() {
+            const word = quizData[currentPracticeWord];
+            const tone = word ? word.tone : 1;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 2]);
+            
+            for (let i = 1; i < 5; i++) {
+                const y = (canvas.height / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(50, y);
+                ctx.lineTo(canvas.width - 50, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            
+            // Draw reference tone curve
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const startX = 50;
+            const endX = canvas.width - 50;
+            const centerY = canvas.height / 2;
+            const amplitude = canvas.height * 0.3;
+            
+            for (let x = startX; x <= endX; x++) {
+                const progress = (x - startX) / (endX - startX);
+                let y = centerY;
+                
+                switch(tone) {
+                    case 1: // High level
+                        y = centerY - amplitude * 0.5;
+                        break;
+                    case 2: // Rising
+                        y = centerY + amplitude * 0.3 - (amplitude * 0.8 * progress);
+                        break;
+                    case 3: // Dipping
+                        if (progress < 0.5) {
+                            y = centerY - (amplitude * 0.5 * (1 - progress * 2));
+                        } else {
+                            y = centerY + amplitude * 0.5 - (amplitude * 0.8 * (progress - 0.5) * 2);
+                        }
+                        break;
+                    case 4: // Falling
+                        y = centerY - amplitude * 0.5 + (amplitude * 0.8 * progress);
+                        break;
+                }
+                
+                if (x === startX) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Add tone labels
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('High', 10, 30);
+            ctx.fillText('Mid', 10, centerY + 5);
+            ctx.fillText('Low', 10, canvas.height - 10);
+        }
+
+        function drawUserPitch(pitchArray) {
+            if (!pitchArray || pitchArray.length < 2) return;
+            
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            const startX = 50;
+            const endX = canvas.width - 50;
+            const centerY = canvas.height / 2;
+            const amplitude = canvas.height * 0.3;
+            
+            // Use a more stable pitch range for better visualization
+            const avgPitch = pitchArray.reduce((sum, p) => sum + p, 0) / pitchArray.length;
+            const pitchStdDev = Math.sqrt(pitchArray.reduce((sum, p) => sum + Math.pow(p - avgPitch, 2), 0) / pitchArray.length);
+            
+            // Use 2 standard deviations for range, but with minimum range
+            const minRange = 50; // Hz minimum range
+            const calculatedRange = Math.max(pitchStdDev * 4, minRange);
+            const minPitch = avgPitch - calculatedRange / 2;
+            const maxPitch = avgPitch + calculatedRange / 2;
+            
+            ctx.beginPath();
+            
+            let firstPoint = true;
+            pitchArray.forEach((pitch, index) => {
+                const x = startX + (index / (pitchArray.length - 1)) * (endX - startX);
+                const normalizedPitch = (pitch - minPitch) / (maxPitch - minPitch);
+                const y = centerY + amplitude - (normalizedPitch * amplitude * 2);
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Add current pitch indicator
+            if (pitchArray.length > 0) {
+                const lastPitch = pitchArray[pitchArray.length - 1];
+                const lastX = startX + ((pitchArray.length - 1) / (pitchArray.length - 1 || 1)) * (endX - startX);
+                const lastNormalizedPitch = (lastPitch - minPitch) / (maxPitch - minPitch);
+                const lastY = centerY + amplitude - (lastNormalizedPitch * amplitude * 2);
+                
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        function updateToneVisualization() {
+            if (!isRecording || !analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Float32Array(bufferLength);
+            analyser.getFloatFrequencyData(dataArray);
+            
+            // Better pitch detection using autocorrelation
+            const pitch = detectPitch(dataArray);
+            
+            if (pitch && pitch > 80 && pitch < 400) { // Human voice range
+                pitchData.push(pitch);
+                
+                // Keep only recent pitch data (about 2 seconds worth)
+                if (pitchData.length > 50) {
+                    pitchData = pitchData.slice(-50);
+                }
+                
+                // Apply smoothing to pitch data
+                const smoothedPitchData = smoothPitchData(pitchData);
+                
+                // Redraw with user pitch
+                drawReferenceTone();
+                drawUserPitch(smoothedPitchData);
+            }
+            
+            if (isRecording) {
+                animationId = requestAnimationFrame(updateToneVisualization);
+            }
+        }
+
+        function detectPitch(frequencyData) {
+            // Convert frequency domain back to time domain for autocorrelation
+            const bufferLength = frequencyData.length;
+            const sampleRate = audioContext.sampleRate;
+            
+            // Find the peak in the frequency domain for human voice range
+            let maxValue = -Infinity;
+            let maxIndex = 0;
+            
+            // Human voice fundamental frequency is typically 80-400 Hz
+            const minFreq = 80;
+            const maxFreq = 400;
+            const minIndex = Math.floor(minFreq * bufferLength * 2 / sampleRate);
+            const maxIndexRange = Math.floor(maxFreq * bufferLength * 2 / sampleRate);
+            
+            for (let i = minIndex; i < Math.min(maxIndexRange, bufferLength); i++) {
+                if (frequencyData[i] > maxValue && frequencyData[i] > -50) { // -50 dB threshold
+                    maxValue = frequencyData[i];
+                    maxIndex = i;
+                }
+            }
+            
+            if (maxValue > -40) { // Strong enough signal
+                return maxIndex * sampleRate / (2 * bufferLength);
+            }
+            
+            return null;
+        }
+
+        function smoothPitchData(data) {
+            if (data.length < 3) return data;
+            
+            // Simple moving average smoothing
+            const smoothed = [];
+            const windowSize = Math.min(3, data.length);
+            
+            for (let i = 0; i < data.length; i++) {
+                let sum = 0;
+                let count = 0;
+                
+                for (let j = Math.max(0, i - Math.floor(windowSize/2)); 
+                     j <= Math.min(data.length - 1, i + Math.floor(windowSize/2)); 
+                     j++) {
+                    sum += data[j];
+                    count++;
+                }
+                
+                smoothed.push(sum / count);
+            }
+            
+            return smoothed;
+        }
 
         // Practice tone highlighting
         document.querySelectorAll('.practice-tone').forEach(tone => {
@@ -791,6 +1075,17 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 recordedChunks = [];
+                pitchData = [];
+                
+                // Set up audio analysis
+                if (!audioContext) {
+                    initAudio();
+                }
+                
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                source.connect(analyser);
                 
                 mediaRecorder.ondataavailable = event => {
                     if (event.data.size > 0) {
@@ -803,6 +1098,11 @@
                     recordedAudio = URL.createObjectURL(blob);
                     document.getElementById('play-btn').disabled = false;
                     showFeedback();
+                    
+                    // Stop analysis
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
                 };
                 
                 mediaRecorder.start();
@@ -817,6 +1117,7 @@
                 document.getElementById('recording-status').className = 'recording-status recording';
                 
                 startWaveAnimation();
+                updateToneVisualization();
                 
             } catch (error) {
                 console.error('Error accessing microphone:', error);
@@ -859,6 +1160,7 @@
             currentPracticeWord = (currentPracticeWord + 1) % quizData.length;
             updatePracticeWord();
             resetRecording();
+            drawReferenceTone();
         }
 
         function updatePracticeWord() {
