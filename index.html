@@ -558,6 +558,200 @@
             background: #e74c3c;
         }
 
+        .quiz-report {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .quiz-report h3 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .report-summary {
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+        }
+
+        .score-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .score-text {
+            font-size: 0.9em;
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .report-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+        }
+
+        .stat-label {
+            display: block;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .tone-breakdown {
+            margin-bottom: 30px;
+        }
+
+        .tone-breakdown h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .tone-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .tone-stat {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tone-label {
+            flex: 0 0 150px;
+            text-align: left;
+            font-size: 0.9em;
+            color: #2c3e50;
+        }
+
+        .tone-bar {
+            flex: 1;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .tone-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .tone-percentage {
+            flex: 0 0 40px;
+            text-align: right;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .detailed-results {
+            margin-bottom: 30px;
+        }
+
+        .detailed-results h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .results-table {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .result-row {
+            display: grid;
+            grid-template-columns: 30px 40px 80px 1fr 80px 50px;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .result-row.correct {
+            background: #d5f4e6;
+        }
+
+        .result-row.incorrect {
+            background: #ffeaea;
+        }
+
+        .result-char {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .result-time {
+            text-align: right;
+            color: #7f8c8d;
+        }
+
+        .report-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .quiz-action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .continue-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .quiz-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -589,8 +783,33 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 Learn Chinese Tones</h1>
+            <h1>🎵 Master Chinese Tones</h1>
             <p>Master the four fundamental tones of Mandarin Chinese</p>
+        </div>
+
+        <div class="quiz-section">
+            <h2 class="quiz-title">🧠 Tone Recognition Quiz</h2>
+            <div class="quiz-progress" id="quiz-progress">Question 1 of 8</div>
+            <div id="quiz-content">
+                <div class="quiz-question" id="quiz-question">
+                    Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
+                </div>
+                <div class="character-display">
+                    <div class="character-info">
+                        <div class="big-character" id="big-char">妈</div>
+                        <div class="character-pinyin" id="char-pinyin">mā</div>
+                        <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
+                    </div>
+                </div>
+                <div class="quiz-options" id="quiz-options">
+                    <div class="quiz-option" onclick="selectAnswer(1)">1st Tone (High Level)</div>
+                    <div class="quiz-option" onclick="selectAnswer(2)">2nd Tone (Rising)</div>
+                    <div class="quiz-option" onclick="selectAnswer(3)">3rd Tone (Dipping)</div>
+                    <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
+                </div>
+                <div id="quiz-result" class="quiz-result" style="display: none;"></div>
+                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
+            </div>
         </div>
 
         <div class="tones-grid">
@@ -651,31 +870,6 @@
             </div>
         </div>
 
-        <div class="quiz-section">
-            <h2 class="quiz-title">🧠 Tone Recognition Quiz</h2>
-            <div class="quiz-progress" id="quiz-progress">Question 1 of 8</div>
-            <div id="quiz-content">
-                <div class="quiz-question" id="quiz-question">
-                    Which tone does this character use: <strong id="quiz-char">妈</strong> (mother)?
-                </div>
-                <div class="character-display">
-                    <div class="character-info">
-                        <div class="big-character" id="big-char">妈</div>
-                        <div class="character-pinyin" id="char-pinyin">mā</div>
-                        <button class="play-character-btn" id="play-char-btn" onclick="playCharacterTone()">🔊 Play Sound</button>
-                    </div>
-                </div>
-                <div class="quiz-options" id="quiz-options">
-                    <div class="quiz-option" onclick="selectAnswer(1)">1st Tone (High Level)</div>
-                    <div class="quiz-option" onclick="selectAnswer(2)">2nd Tone (Rising)</div>
-                    <div class="quiz-option" onclick="selectAnswer(3)">3rd Tone (Dipping)</div>
-                    <div class="quiz-option" onclick="selectAnswer(4)">4th Tone (Falling)</div>
-                </div>
-                <div id="quiz-result" class="quiz-result" style="display: none;"></div>
-                <button id="next-question" class="next-question" style="display: none;">Next Question</button>
-            </div>
-        </div>
-
         <div class="practice-section">
             <h2>🎯 Tone Practice</h2>
             <p>Click on a tone number to hear how it sounds, then practice speaking!</p>
@@ -720,8 +914,8 @@
     </div>
 
     <script>
-        // Quiz data
-        const quizData = [
+        // Quiz data (base questions)
+        const baseQuizData = [
             { char: '妈', pinyin: 'mā', meaning: 'mother', tone: 1 },
             { char: '麻', pinyin: 'má', meaning: 'hemp', tone: 2 },
             { char: '马', pinyin: 'mǎ', meaning: 'horse', tone: 3 },
@@ -732,9 +926,17 @@
             { char: '大', pinyin: 'dà', meaning: 'big', tone: 4 }
         ];
 
+        // Shuffled quiz data (will be randomized each time)
+        let quizData = [];
+
         let currentQuestion = 0;
         let score = 0;
         let answered = false;
+        
+        // Quiz performance tracking
+        let quizAnswers = [];
+        let quizStartTime = null;
+        let questionStartTime = null;
 
         // Audio context for tone generation
         let audioContext;
@@ -753,6 +955,22 @@
         let analyser;
         let pitchData = [];
         let animationId;
+
+        // Shuffle function (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            const shuffled = [...array]; // Create a copy
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function initializeQuiz() {
+            // Shuffle the quiz questions
+            quizData = shuffleArray(baseQuizData);
+            console.log('Quiz questions shuffled:', quizData.map(q => q.char));
+        }
 
         function initAudio() {
             if (!isAudioInitialized) {
@@ -844,6 +1062,14 @@
             console.log('currentQuestion index:', currentQuestion);
             console.log('Display will show: Question', currentQuestion + 1, 'of', quizData.length);
             
+            // Start timing for this question
+            questionStartTime = Date.now();
+            
+            // Initialize quiz start time on first question
+            if (currentQuestion === 0 && !quizStartTime) {
+                quizStartTime = Date.now();
+            }
+            
             const question = quizData[currentQuestion];
             console.log('Question data:', question);
             
@@ -905,6 +1131,21 @@
             const resultDiv = document.getElementById('quiz-result');
             const nextBtn = document.getElementById('next-question');
             
+            // Track answer performance
+            const responseTime = questionStartTime ? Date.now() - questionStartTime : 0;
+            const isCorrect = selectedTone === question.tone;
+            
+            quizAnswers.push({
+                questionIndex: currentQuestion,
+                character: question.char,
+                pinyin: question.pinyin,
+                meaning: question.meaning,
+                correctTone: question.tone,
+                selectedTone: selectedTone,
+                isCorrect: isCorrect,
+                responseTime: responseTime
+            });
+            
             options.forEach((option, index) => {
                 const toneNum = index + 1;
                 if (toneNum === question.tone) {
@@ -958,18 +1199,7 @@
             if (currentQuestion >= quizData.length) {
                 // Quiz completed
                 console.log('Quiz completed - showing final screen');
-                const quizContent = document.getElementById('quiz-content');
-                if (quizContent) {
-                    quizContent.innerHTML = `
-                        <div style="text-align: center;">
-                            <h3>Quiz Complete! 🎊</h3>
-                            <p style="font-size: 1.2em; margin: 20px 0;">
-                                You scored ${score} out of ${quizData.length}
-                            </p>
-                            <button class="next-question" onclick="resetQuiz()">Start Over</button>
-                        </div>
-                    `;
-                }
+                showQuizReport();
             } else {
                 console.log('Loading next question index:', currentQuestion);
                 loadQuestion();
@@ -980,9 +1210,143 @@
             }, 100);
         }
 
+        function showQuizReport() {
+            const totalTime = quizStartTime ? Date.now() - quizStartTime : 0;
+            const averageTime = quizAnswers.length > 0 ? totalTime / quizAnswers.length : 0;
+            const correctAnswers = quizAnswers.filter(answer => answer.isCorrect).length;
+            const percentage = Math.round((correctAnswers / quizData.length) * 100);
+            
+            // Analyze performance by tone
+            const toneStats = {};
+            for (let i = 1; i <= 4; i++) {
+                const toneQuestions = quizAnswers.filter(answer => answer.correctTone === i);
+                const toneCorrect = toneQuestions.filter(answer => answer.isCorrect).length;
+                toneStats[i] = {
+                    total: toneQuestions.length,
+                    correct: toneCorrect,
+                    percentage: toneQuestions.length > 0 ? Math.round((toneCorrect / toneQuestions.length) * 100) : 0
+                };
+            }
+            
+            // Generate performance feedback
+            let feedback = '';
+            if (percentage >= 90) {
+                feedback = '🏆 Excellent! You have mastered Chinese tone recognition!';
+            } else if (percentage >= 75) {
+                feedback = '👍 Great job! You have a good grasp of Chinese tones.';
+            } else if (percentage >= 50) {
+                feedback = '📚 Good progress! Keep practicing to improve your tone recognition.';
+            } else {
+                feedback = '💪 Keep practicing! Tone recognition takes time to master.';
+            }
+            
+            // Find most challenging tones
+            const sortedTones = Object.entries(toneStats)
+                .sort((a, b) => a[1].percentage - b[1].percentage)
+                .slice(0, 2);
+            
+            const toneNames = {
+                1: '1st Tone (High Level)',
+                2: '2nd Tone (Rising)', 
+                3: '3rd Tone (Dipping)',
+                4: '4th Tone (Falling)'
+            };
+            
+            let reportHTML = `
+                <div class="quiz-report">
+                    <h3>📊 Your Quiz Report</h3>
+                    
+                    <div class="report-summary">
+                        <div class="score-circle">
+                            <div class="score-number">${percentage}%</div>
+                            <div class="score-text">${correctAnswers}/${quizData.length} correct</div>
+                        </div>
+                        <p class="feedback">${feedback}</p>
+                    </div>
+                    
+                    <div class="report-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Time:</span>
+                            <span class="stat-value">${Math.round(totalTime / 1000)}s</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg per Question:</span>
+                            <span class="stat-value">${Math.round(averageTime / 1000)}s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tone-breakdown">
+                        <h4>Performance by Tone:</h4>
+                        <div class="tone-stats">`;
+            
+            for (let i = 1; i <= 4; i++) {
+                const stats = toneStats[i];
+                reportHTML += `
+                    <div class="tone-stat">
+                        <div class="tone-label">${toneNames[i]}</div>
+                        <div class="tone-bar">
+                            <div class="tone-progress" style="width: ${stats.percentage}%"></div>
+                        </div>
+                        <div class="tone-percentage">${stats.percentage}%</div>
+                    </div>`;
+            }
+            
+            reportHTML += `
+                        </div>
+                    </div>
+                    
+                    <div class="detailed-results">
+                        <h4>Question Details:</h4>
+                        <div class="results-table">`;
+            
+            quizAnswers.forEach((answer, index) => {
+                const statusIcon = answer.isCorrect ? '✅' : '❌';
+                const responseTime = Math.round(answer.responseTime / 1000);
+                reportHTML += `
+                    <div class="result-row ${answer.isCorrect ? 'correct' : 'incorrect'}">
+                        <span class="result-icon">${statusIcon}</span>
+                        <span class="result-char">${answer.character}</span>
+                        <span class="result-pinyin">${answer.pinyin}</span>
+                        <span class="result-meaning">${answer.meaning}</span>
+                        <span class="result-tone">Tone ${answer.correctTone}</span>
+                        <span class="result-time">${responseTime}s</span>
+                    </div>`;
+            });
+            
+            reportHTML += `
+                        </div>
+                    </div>
+                    
+                    <div class="report-actions">
+                        <button class="quiz-action-btn retry-btn" onclick="resetQuiz()">🔄 Try Again</button>
+                        <button class="quiz-action-btn continue-btn" onclick="continueToLearning()">📚 Continue Learning</button>
+                    </div>
+                </div>
+            `;
+            
+            const quizContent = document.getElementById('quiz-content');
+            if (quizContent) {
+                quizContent.innerHTML = reportHTML;
+            }
+        }
+        
+        function continueToLearning() {
+            // Scroll to the tone cards section
+            const tonesGrid = document.querySelector('.tones-grid');
+            if (tonesGrid) {
+                tonesGrid.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
         function resetQuiz() {
             currentQuestion = 0;
             score = 0;
+            quizAnswers = [];
+            quizStartTime = null;
+            questionStartTime = null;
+            
+            // Shuffle questions for new quiz
+            initializeQuiz();
             
             // Reset progress counter
             const progressDiv = document.getElementById('quiz-progress');
@@ -1016,6 +1380,7 @@
         // Initialize the quiz
         document.addEventListener('DOMContentLoaded', function() {
             try {
+                initializeQuiz(); // Shuffle questions first
                 loadQuestion();
                 initializeWaveBars();
                 updatePracticeWord();
